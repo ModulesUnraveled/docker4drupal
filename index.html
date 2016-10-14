@@ -31,40 +31,9 @@
 <ul>
 <li><a href="#overview">Overview</a></li>
 <li><a href="#instructions">Instructions</a></li>
-<li>
-<a href="#containers">Containers</a>
-
-<ul>
-<li><a href="#accessing-containers">Accessing containers</a></li>
-<li><a href="#nginx">Nginx</a></li>
-<li>
-<a href="#php">PHP</a>
-
-<ul>
-<li><a href="#drush">Drush</a></li>
-<li><a href="#composer">Composer</a></li>
-<li><a href="#drupal-console">Drupal Console</a></li>
-<li><a href="#xdebug">Xdebug</a></li>
-</ul>
-</li>
-<li>
-<a href="#mariadb">MariaDB</a>
-
-<ul>
-<li><a href="#import">Import</a></li>
-<li><a href="#export">Export</a></li>
-</ul>
-</li>
-<li><a href="#redis">Redis</a></li>
-<li><a href="#memcached">Memcached</a></li>
-<li><a href="#memcached-admin">Memcached Admin</a></li>
-<li><a href="#mailhog">Mailhog</a></li>
-<li><a href="#phpmyadmin">phpMyAdmin</a></li>
-<li><a href="#apache-solr">Apache Solr</a></li>
-<li><a href="#varnish">Varnish</a></li>
-</ul>
-</li>
+<li><a href="#containers">Containers</a></li>
 <li><a href="#multiple-projects">Multiple projects</a></li>
+<li><a href="#cicd">CI/CD</a></li>
 <li><a href="#docroot-in-subdirectory">Docroot in subdirectory</a></li>
 <li><a href="#logs">Logs</a></li>
 <li><a href="#status">Status</a></li>
@@ -196,7 +165,7 @@ host: mariadb
 
 <p>7. If you want to import your database, uncomment the following line in the compose file:</p>
 
-<div class="highlight highlight-source-yaml"><pre><span class="pl-c">#      - ./docker-runtime/mariadb-init:/docker-entrypoint-initdb.d # Place init .sql file(s) her</span></pre></div>
+<div class="highlight highlight-source-yaml"><pre><span class="pl-c">#      - ./docker-runtime/mariadb-init:/docker-entrypoint-initdb.d # Place init .sql file(s) here</span></pre></div>
 
 <p>Create the volume directory <code>./docker-runtime/mariadb-init</code> in the same directory as the compose file and put there your SQL file(s). All SQL files will be automatically imported once MariaDB container has started.</p>
 
@@ -262,11 +231,27 @@ host: mariadb
 <h4>
 <a id="xdebug" class="anchor" href="#xdebug" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Xdebug</h4>
 
-<p>If you want to use xdebug, enable the following option in the compose file:</p>
+<p>If you want to use Xdebug, uncomment this line to enable it in the compose file before starting containers:</p>
 
-<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">PHP_XDEBUG_ENABLED:</span> <span class="pl-c1">0</span> <span class="pl-c"># Set 1 to enable.</span></pre></div>
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">PHP_XDEBUG_ENABLED:</span> <span class="pl-c1">1</span>       <span class="pl-c"># Comment out to disable (default).</span></pre></div>
 
-<p>See the <a href="https://github.com/Wodby/drupal-php/issues/1">known issue</a> with Xdebug in Mac OS.</p>
+<p>If you would like to autostart Xdebug, uncomment this line:</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">PHP_XDEBUG_AUTOSTART:</span> <span class="pl-c1">1</span>     <span class="pl-c"># Comment out to disable (default).</span></pre></div>
+
+<h4>
+<a id="xdebug-on-mac-os-x" class="anchor" href="#xdebug-on-mac-os-x" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Xdebug on Mac OS X</h4>
+
+<p>There are two more things that need to be done on Mac OS X in order to have Xdebug working. Uncomment <code>PHP_XDEBUG_ENABLED</code> to enable Xdebug and uncomment the following two lines:</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-ent">PHP_XDEBUG_REMOTE_CONNECT_BACK:</span> <span class="pl-c1">0</span>         <span class="pl-c"># Disabled for remote.host to work (enabled by default)</span>
+<span class="pl-ent">PHP_XDEBUG_REMOTE_HOST:</span> <span class="pl-s"><span class="pl-pds">"</span>10.254.254.254<span class="pl-pds">"</span></span><span class="pl-s">  </span><span class="pl-c"># Setting the host (localhost by default)</span></pre></div>
+
+<p>It is also needed to have localhost loopback alias with IP from above. You need this only once and that settings stays active until logout or restart.</p>
+
+<div class="highlight highlight-source-shell"><pre>sudo ifconfig lo0 <span class="pl-c1">alias</span> 10.254.254.254</pre></div>
+
+<p>For more details see the issue with <a href="https://github.com/Wodby/drupal-php/issues/1">Xdebug in Mac OS</a>.</p>
 
 <h3>
 <a id="mariadb" class="anchor" href="#mariadb" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>MariaDB</h3>
@@ -363,6 +348,16 @@ To get started visit http://localhost:8006/index.php</p>
 <a id="multiple-projects" class="anchor" href="#multiple-projects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multiple projects</h2>
 
 <p>To use D4D with multiple projects simply adjust the ports in the compose file, e.g. instead of ports 8000, 8001, 8002 you can use 7000, 7001, 7002.</p>
+
+<h2>
+<a id="cicd" class="anchor" href="#cicd" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>CI/CD</h2>
+
+<p>You can use docker4drupal containers for your test environment in your CI/CD workflow:</p>
+
+<ul>
+<li><a href="https://blog.wodby.com/continuous-integration-and-delivery-drupal-docker-circleci-192c6ac97087#.gh8sggeze">CircleCI example</a></li>
+<li><a href="https://blog.wodby.com/drupal-8-ci-cd-with-jenkins-part-1-integration-eabd0f5c4f75#.obnyfv84i">Jenkins example</a></li>
+</ul>
 
 <h2>
 <a id="docroot-in-subdirectory" class="anchor" href="#docroot-in-subdirectory" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Docroot in subdirectory</h2>
